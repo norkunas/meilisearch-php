@@ -90,7 +90,7 @@ final class SettingsTest extends TestCase
             'facetSearch' => false,
             'prefixSearch' => 'disabled',
         ]);
-        $this->assertIsValidPromise($promise);
+
         $index->waitForTask($promise['taskUid']);
 
         $settings = $index->getSettings();
@@ -133,14 +133,12 @@ final class SettingsTest extends TestCase
             'typoTolerance' => $new_typo_tolerance,
         ]);
 
-        $this->assertIsValidPromise($promise);
         $index->waitForTask($promise['taskUid']);
 
         $promise = $index->updateSettings([
             'searchableAttributes' => ['title'],
         ]);
 
-        $this->assertIsValidPromise($promise);
         $index->waitForTask($promise['taskUid']);
 
         $settings = $index->getSettings();
@@ -168,12 +166,11 @@ final class SettingsTest extends TestCase
             'rankingRules' => ['title:asc', 'typo'],
             'stopWords' => ['the'],
         ]);
-        $this->assertIsValidPromise($promise);
+
         $index->waitForTask($promise['taskUid']);
 
         $promise = $index->resetSettings();
 
-        $this->assertIsValidPromise($promise);
         $index->waitForTask($promise['taskUid']);
 
         $settings = $index->getSettings();

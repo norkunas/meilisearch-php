@@ -6,6 +6,7 @@ namespace Tests\Endpoints;
 
 use Meilisearch\Contracts\CancelTasksQuery;
 use Meilisearch\Contracts\TasksQuery;
+use MeiliSearch\Contracts\TaskType;
 use Meilisearch\Endpoints\Indexes;
 use Meilisearch\Exceptions\ApiException;
 use Tests\TestCase;
@@ -26,7 +27,6 @@ final class TasksTest extends TestCase
     {
         [$promise, $response] = $this->seedIndex();
 
-        self::assertIsArray($response);
         self::assertArrayHasKey('status', $response);
         self::assertSame($response['uid'], $promise['taskUid']);
         self::assertArrayHasKey('type', $response);
@@ -43,7 +43,6 @@ final class TasksTest extends TestCase
     {
         [$promise, $response] = $this->seedIndex();
 
-        self::assertIsArray($promise);
         $response = $this->client->getTask($promise['taskUid']);
         self::assertArrayHasKey('status', $response);
         self::assertSame($response['uid'], $promise['taskUid']);
@@ -92,7 +91,6 @@ final class TasksTest extends TestCase
     {
         [$promise, $response] = $this->seedIndex();
 
-        self::assertIsArray($promise);
         $response = $this->index->getTask($promise['taskUid']);
         self::assertArrayHasKey('status', $response);
         self::assertSame($response['uid'], $promise['taskUid']);
@@ -150,6 +148,17 @@ final class TasksTest extends TestCase
         self::assertSame('?'.$query, $response['details']['originalFilter']);
         self::assertSame('taskCancelation', $response['type']);
         self::assertSame('succeeded', $response['status']);
+
+        //        $date = new \DateTime('yesterday');
+        //        $query = http_build_query(['afterEnqueuedAt' => $date->format(\DateTime::RFC3339)]);
+        //        $task = $this->client->cancelTasks((new CancelTasksQuery())->setAfterEnqueuedAt($date));
+        //
+        //        self::assertSame(TaskType::TaskCancelation, $task->getType());
+        //        $response = $this->client->waitForTask($task->getTaskUid());
+        //
+        //        self::assertSame('?'.$query, $response['details']['originalFilter']);
+        //        // self::assertSame(TaskType::TaskCancelation, $response['type']);
+        //        self::assertSame('succeeded', $response['status']);
     }
 
     public function testGetAllTasksInReverseOrder(): void
@@ -169,6 +178,8 @@ final class TasksTest extends TestCase
     public function testExceptionIfNoTaskIdWhenGetting(): void
     {
         $this->expectException(ApiException::class);
+        $this->expectExceptionMessage('Task `99999999` not found.');
+
         $this->index->getTask(99999999);
     }
 

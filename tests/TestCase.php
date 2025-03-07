@@ -97,11 +97,6 @@ abstract class TestCase extends BaseTestCase
         $this->client->waitForTasks($tasks);
     }
 
-    public function assertIsValidPromise(array $promise): void
-    {
-        self::assertArrayHasKey('taskUid', $promise);
-    }
-
     public function assertFinitePagination(array $response): void
     {
         $currentKeys = array_keys($response);
@@ -139,7 +134,7 @@ abstract class TestCase extends BaseTestCase
     public function createEmptyIndex($indexName, $options = []): Indexes
     {
         $response = $this->client->createIndex($indexName, $options);
-        $this->client->waitForTask($response['taskUid']);
+        $this->client->waitForTask($response->getTaskUid(), timeoutInMs: 10000);
 
         return $this->client->getIndex($response['indexUid']);
     }

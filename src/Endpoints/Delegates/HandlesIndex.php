@@ -6,6 +6,7 @@ namespace Meilisearch\Endpoints\Delegates;
 
 use Meilisearch\Contracts\IndexesQuery;
 use Meilisearch\Contracts\IndexesResults;
+use MeiliSearch\Contracts\Task;
 use Meilisearch\Endpoints\Indexes;
 
 trait HandlesIndex
@@ -32,17 +33,17 @@ trait HandlesIndex
         return $this->index($uid)->fetchInfo();
     }
 
-    public function deleteIndex(string $uid): array
+    public function deleteIndex(string $uid): Task
     {
         return $this->index($uid)->delete();
     }
 
-    public function createIndex(string $uid, array $options = []): array
+    public function createIndex(string $uid, array $options = []): Task
     {
         return $this->index->create($uid, $options);
     }
 
-    public function updateIndex(string $uid, array $options = []): array
+    public function updateIndex(string $uid, array $options = []): Task
     {
         return $this->index($uid)->update($options);
     }

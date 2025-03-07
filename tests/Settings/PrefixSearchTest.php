@@ -23,7 +23,6 @@ final class PrefixSearchTest extends TestCase
 
         $promise = $index->updatePrefixSearch('disabled');
 
-        $this->assertIsValidPromise($promise);
         $index->waitForTask($promise['taskUid']);
 
         $prefixSearch = $index->getPrefixSearch();
@@ -38,8 +37,6 @@ final class PrefixSearchTest extends TestCase
         $index->waitForTask($promise['taskUid']);
 
         $promise = $index->resetPrefixSearch();
-
-        $this->assertIsValidPromise($promise);
 
         $index->waitForTask($promise['taskUid']);
 

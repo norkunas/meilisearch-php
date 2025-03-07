@@ -30,8 +30,6 @@ final class SearchableAttributesTest extends TestCase
 
         $promise = $indexA->updateSearchableAttributes($searchableAttributes);
 
-        $this->assertIsValidPromise($promise);
-
         $indexA->waitForTask($promise['taskUid']);
         $updatedAttributes = $indexA->getSearchableAttributes();
 
@@ -42,8 +40,6 @@ final class SearchableAttributesTest extends TestCase
     {
         $index = $this->createEmptyIndex($this->safeIndexName('books-1'));
         $promise = $index->resetSearchableAttributes();
-
-        $this->assertIsValidPromise($promise);
 
         $index->waitForTask($promise['taskUid']);
         $searchableAttributes = $index->getSearchableAttributes();

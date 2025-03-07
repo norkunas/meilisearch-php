@@ -29,8 +29,6 @@ final class SynonymsTest extends TestCase
         ];
         $promise = $this->index->updateSynonyms($newSynonyms);
 
-        $this->assertIsValidPromise($promise);
-
         $this->index->waitForTask($promise['taskUid']);
         $synonyms = $this->index->getSynonyms();
 
@@ -41,8 +39,6 @@ final class SynonymsTest extends TestCase
     {
         $newSynonyms = [];
         $promise = $this->index->updateSynonyms($newSynonyms);
-
-        $this->assertIsValidPromise($promise);
 
         $this->index->waitForTask($promise['taskUid']);
         $synonyms = $this->index->getSynonyms();
@@ -57,8 +53,6 @@ final class SynonymsTest extends TestCase
         ]);
         $this->index->waitForTask($promise['taskUid']);
         $promise = $this->index->resetSynonyms();
-
-        $this->assertIsValidPromise($promise);
 
         $this->index->waitForTask($promise['taskUid']);
         $synonyms = $this->index->getSynonyms();

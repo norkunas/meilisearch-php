@@ -23,7 +23,6 @@ final class FacetSearchTest extends TestCase
 
         $promise = $index->updateFacetSearch(false);
 
-        $this->assertIsValidPromise($promise);
         $index->waitForTask($promise['taskUid']);
 
         $facetSearch = $index->getFacetSearch();
@@ -38,8 +37,6 @@ final class FacetSearchTest extends TestCase
         $index->waitForTask($promise['taskUid']);
 
         $promise = $index->resetFacetSearch();
-
-        $this->assertIsValidPromise($promise);
 
         $index->waitForTask($promise['taskUid']);
 

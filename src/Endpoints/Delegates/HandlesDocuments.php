@@ -6,6 +6,7 @@ namespace Meilisearch\Endpoints\Delegates;
 
 use Meilisearch\Contracts\DocumentsQuery;
 use Meilisearch\Contracts\DocumentsResults;
+use MeiliSearch\Contracts\Task;
 use Meilisearch\Exceptions\ApiException;
 use Meilisearch\Exceptions\InvalidArgumentException;
 use Meilisearch\Exceptions\InvalidResponseBodyException;
@@ -91,57 +92,66 @@ trait HandlesDocuments
         return $promises;
     }
 
-    public function updateDocuments(array $documents, ?string $primaryKey = null)
+    public function updateDocuments(array $documents, ?string $primaryKey = null): Task
     {
-        return $this->http->put(self::PATH.'/'.$this->uid.'/documents', $documents, ['primaryKey' => $primaryKey]);
+        return Task::fromArray($this->http->put(self::PATH.'/'.$this->uid.'/documents', $documents, ['primaryKey' => $primaryKey]));
     }
 
-    public function updateDocumentsJson(string $documents, ?string $primaryKey = null)
+    public function updateDocumentsJson(string $documents, ?string $primaryKey = null): Task
     {
-        return $this->http->put(self::PATH.'/'.$this->uid.'/documents', $documents, ['primaryKey' => $primaryKey], 'application/json');
+        return Task::fromArray($this->http->put(self::PATH.'/'.$this->uid.'/documents', $documents, ['primaryKey' => $primaryKey], 'application/json'));
     }
 
-    public function updateDocumentsCsv(string $documents, ?string $primaryKey = null, ?string $delimiter = null)
+    public function updateDocumentsCsv(string $documents, ?string $primaryKey = null, ?string $delimiter = null): Task
     {
-        return $this->http->put(self::PATH.'/'.$this->uid.'/documents', $documents, ['primaryKey' => $primaryKey, 'csvDelimiter' => $delimiter], 'text/csv');
+        return Task::fromArray($this->http->put(self::PATH.'/'.$this->uid.'/documents', $documents, ['primaryKey' => $primaryKey, 'csvDelimiter' => $delimiter], 'text/csv'));
     }
 
-    public function updateDocumentsNdjson(string $documents, ?string $primaryKey = null)
+    public function updateDocumentsNdjson(string $documents, ?string $primaryKey = null): Task
     {
-        return $this->http->put(self::PATH.'/'.$this->uid.'/documents', $documents, ['primaryKey' => $primaryKey], 'application/x-ndjson');
+        return Task::fromArray($this->http->put(self::PATH.'/'.$this->uid.'/documents', $documents, ['primaryKey' => $primaryKey], 'application/x-ndjson'));
     }
 
-    public function updateDocumentsInBatches(array $documents, ?int $batchSize = 1000, ?string $primaryKey = null)
+    /**
+     * @return list<Task>
+     */
+    public function updateDocumentsInBatches(array $documents, ?int $batchSize = 1000, ?string $primaryKey = null): array
     {
-        $promises = [];
+        $tasks = [];
 
         foreach (self::batch($documents, $batchSize) as $batch) {
-            $promises[] = $this->updateDocuments($batch, $primaryKey);
+            $tasks[] = $this->updateDocuments($batch, $primaryKey);
         }
 
-        return $promises;
+        return $tasks;
     }
 
-    public function updateDocumentsCsvInBatches(string $documents, ?int $batchSize = 1000, ?string $primaryKey = null, ?string $delimiter = null)
+    /**
+     * @return list<Task>
+     */
+    public function updateDocumentsCsvInBatches(string $documents, ?int $batchSize = 1000, ?string $primaryKey = null, ?string $delimiter = null): array
     {
-        $promises = [];
+        $tasks = [];
 
         foreach (self::batchCsvString($documents, $batchSize) as $batch) {
-            $promises[] = $this->updateDocumentsCsv($batch, $primaryKey, $delimiter);
+            $tasks[] = $this->updateDocumentsCsv($batch, $primaryKey, $delimiter);
         }
 
-        return $promises;
+        return $tasks;
     }
 
-    public function updateDocumentsNdjsonInBatches(string $documents, ?int $batchSize = 1000, ?string $primaryKey = null)
+    /**
+     * @return list<Task>
+     */
+    public function updateDocumentsNdjsonInBatches(string $documents, ?int $batchSize = 1000, ?string $primaryKey = null): array
     {
-        $promises = [];
+        $tasks = [];
 
         foreach (self::batchNdjsonString($documents, $batchSize) as $batch) {
-            $promises[] = $this->updateDocumentsNdjson($batch, $primaryKey);
+            $tasks[] = $this->updateDocumentsNdjson($batch, $primaryKey);
         }
 
-        return $promises;
+        return $tasks;
     }
 
     /**
@@ -159,28 +169,28 @@ trait HandlesDocuments
         return $this->http->post(self::PATH.'/'.$this->uid.'/documents/edit', array_merge(['function' => $function], $options));
     }
 
-    public function deleteAllDocuments(): array
+    public function deleteAllDocuments(): Task
     {
-        return $this->http->delete(self::PATH.'/'.$this->uid.'/documents');
+        return Task::fromArray($this->http->delete(self::PATH.'/'.$this->uid.'/documents'));
     }
 
-    public function deleteDocument($documentId): array
+    public function deleteDocument($documentId): Task
     {
         $this->assertValidDocumentId($documentId);
 
-        return $this->http->delete(self::PATH.'/'.$this->uid.'/documents/'.$documentId);
+        return Task::fromArray($this->http->delete(self::PATH.'/'.$this->uid.'/documents/'.$documentId));
     }
 
-    public function deleteDocuments(array $options): array
+    public function deleteDocuments(array $options): Task
     {
         try {
             if (\array_key_exists('filter', $options) && $options['filter']) {
-                return $this->http->post(self::PATH.'/'.$this->uid.'/documents/delete', $options);
+                return Task::fromArray($this->http->post(self::PATH.'/'.$this->uid.'/documents/delete', $options));
             }
 
             // backwards compatibility:
             // expect to be a array to send alongside as $documents_ids.
-            return $this->http->post(self::PATH.'/'.$this->uid.'/documents/delete-batch', $options);
+            return Task::fromArray($this->http->post(self::PATH.'/'.$this->uid.'/documents/delete-batch', $options));
         } catch (InvalidResponseBodyException $e) {
             throw ApiException::rethrowWithHint($e, __FUNCTION__);
         }

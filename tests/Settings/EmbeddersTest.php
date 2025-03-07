@@ -32,7 +32,6 @@ final class EmbeddersTest extends TestCase
 
         $promise = $this->index->updateEmbedders($newEmbedders);
 
-        $this->assertIsValidPromise($promise);
         $this->index->waitForTask($promise['taskUid']);
 
         $embedders = $this->index->getEmbedders();
@@ -43,8 +42,6 @@ final class EmbeddersTest extends TestCase
     public function testResetEmbedders(): void
     {
         $promise = $this->index->resetEmbedders();
-
-        $this->assertIsValidPromise($promise);
 
         $this->index->waitForTask($promise['taskUid']);
         $embedders = $this->index->getEmbedders();

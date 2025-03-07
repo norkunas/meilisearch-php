@@ -29,8 +29,6 @@ final class StopWordsTest extends TestCase
         $newStopWords = ['the'];
         $promise = $this->index->updateStopWords($newStopWords);
 
-        $this->assertIsValidPromise($promise);
-
         $this->index->waitForTask($promise['taskUid']);
         $stopWords = $this->index->getStopWords();
 
@@ -44,7 +42,6 @@ final class StopWordsTest extends TestCase
 
         $promise = $this->index->resetStopWords();
 
-        $this->assertIsValidPromise($promise);
         $this->index->waitForTask($promise['taskUid']);
 
         $stopWords = $this->index->getStopWords();
