@@ -6,12 +6,15 @@ namespace Tests\Endpoints;
 
 use Meilisearch\Contracts\DocumentsQuery;
 use Meilisearch\Contracts\Http;
+use MeiliSearch\Contracts\Task;
+use MeiliSearch\Contracts\TaskType;
 use Meilisearch\Endpoints\Indexes;
 use Meilisearch\Exceptions\ApiException;
 use Meilisearch\Exceptions\InvalidResponseBodyException;
 use Meilisearch\Exceptions\JsonEncodingException;
 use Meilisearch\Http\Client;
 use Psr\Http\Message\ResponseInterface;
+use Tests\MockTask;
 use Tests\TestCase;
 
 final class DocumentsTest extends TestCase
@@ -20,8 +23,6 @@ final class DocumentsTest extends TestCase
     {
         $index = $this->createEmptyIndex($this->safeIndexName('movies'));
         $promise = $index->addDocuments(self::DOCUMENTS);
-
-        $this->assertIsValidPromise($promise);
 
         $index->waitForTask($promise['taskUid']);
         $response = $index->getDocuments();
@@ -36,7 +37,6 @@ final class DocumentsTest extends TestCase
         self::assertCount(4, $promises);
 
         foreach ($promises as $promise) {
-            $this->assertIsValidPromise($promise);
             $index->waitForTask($promise['taskUid']);
         }
 
@@ -55,7 +55,6 @@ final class DocumentsTest extends TestCase
         $index = $this->createEmptyIndex($this->safeIndexName('movies'));
         $promise = $index->addDocuments($documents);
 
-        $this->assertIsValidPromise($promise);
         $index->waitForTask($promise['taskUid']);
 
         $response = $index->getDocuments();
@@ -77,8 +76,6 @@ final class DocumentsTest extends TestCase
 
         $promise = $index->addDocumentsCsv($documentCsv);
 
-        $this->assertIsValidPromise($promise);
-
         $update = $index->waitForTask($promise['taskUid']);
 
         self::assertSame('succeeded', $update['status']);
@@ -95,8 +92,6 @@ final class DocumentsTest extends TestCase
         $csv = file_get_contents('./tests/datasets/songs-custom-separator.csv', true);
 
         $promise = $index->addDocumentsCsv($csv, null, '|');
-
-        $this->assertIsValidPromise($promise);
 
         $update = $index->waitForTask($promise['taskUid']);
 
@@ -118,8 +113,6 @@ final class DocumentsTest extends TestCase
 
         $promise = $index->addDocumentsJson($documentJson);
 
-        $this->assertIsValidPromise($promise);
-
         $update = $index->waitForTask($promise['taskUid']);
 
         self::assertSame('succeeded', $update['status']);
@@ -138,8 +131,6 @@ final class DocumentsTest extends TestCase
         fclose($fileNdJson);
 
         $promise = $index->addDocumentsNdjson($documentNdJson);
-
-        $this->assertIsValidPromise($promise);
 
         $update = $index->waitForTask($promise['taskUid']);
 
@@ -207,8 +198,6 @@ final class DocumentsTest extends TestCase
         ];
         $response = $index->addDocuments([$replacement]);
 
-        $this->assertIsValidPromise($response);
-
         $index->waitForTask($response['taskUid']);
         $response = $index->getDocument($replacement['id']);
 
@@ -229,8 +218,6 @@ final class DocumentsTest extends TestCase
             'title' => 'The Little Prince',
         ];
         $promise = $index->updateDocuments([$replacement]);
-
-        $this->assertIsValidPromise($promise);
 
         $index->waitForTask($promise['taskUid']);
         $response = $index->getDocument($replacement['id']);
@@ -262,7 +249,6 @@ final class DocumentsTest extends TestCase
         self::assertCount(2, $promises);
 
         foreach ($promises as $promise) {
-            $this->assertIsValidPromise($promise);
             $index->waitForTask($promise['taskUid']);
         }
 
@@ -346,7 +332,6 @@ final class DocumentsTest extends TestCase
         self::assertCount(2, $promises);
 
         foreach ($promises as $promise) {
-            $this->assertIsValidPromise($promise);
             $index->waitForTask($promise['taskUid']);
         }
 
@@ -368,18 +353,18 @@ final class DocumentsTest extends TestCase
 
         $index->expects(self::exactly(2))
               ->method('addDocumentsCsv')
-              ->willReturnCallback(function (string $documents, $primaryKey, $delimiter): array {
+              ->willReturnCallback(function (string $documents, $primaryKey, $delimiter): Task {
                   static $invocation = 0;
                   // withConsecutive has no replacement https://github.com/sebastianbergmann/phpunit/issues/4026
                   switch (++$invocation) {
                       case 1:
                           self::assertSame(["id;title\n888221515;Young folks", null, ';'], [$documents, $primaryKey, $delimiter]);
 
-                          return [];
+                          return MockTask::create(TaskType::DocumentEdition);
                       case 2:
                           self::assertSame(["id;title\n235115704;Mister Klein", null, ';'], [$documents, $primaryKey, $delimiter]);
 
-                          return [];
+                          return MockTask::create(TaskType::DocumentEdition);
                       default:
                           self::fail();
                   }
@@ -403,7 +388,6 @@ final class DocumentsTest extends TestCase
         self::assertCount(2, $promises);
 
         foreach ($promises as $promise) {
-            $this->assertIsValidPromise($promise);
             $index->waitForTask($promise['taskUid']);
         }
 
@@ -421,8 +405,6 @@ final class DocumentsTest extends TestCase
             'title' => '1984',
         ];
         $promise = $index->updateDocuments([$document]);
-
-        $this->assertIsValidPromise($promise);
 
         $index->waitForTask($promise['taskUid']);
         $response = $index->getDocument($document['id']);
@@ -445,8 +427,6 @@ final class DocumentsTest extends TestCase
         $documentId = 9;
         $promise = $index->deleteDocument($documentId);
 
-        $this->assertIsValidPromise($promise);
-
         $index->waitForTask($promise['taskUid']);
         $response = $index->getDocuments();
 
@@ -462,8 +442,6 @@ final class DocumentsTest extends TestCase
 
         $documentId = 123;
         $promise = $index->deleteDocument($documentId);
-
-        $this->assertIsValidPromise($promise);
 
         $index->waitForTask($promise['taskUid']);
         $response = $index->getDocuments();
@@ -495,8 +473,6 @@ final class DocumentsTest extends TestCase
         $documentIds = [1, 2];
         $promise = $index->deleteDocuments($documentIds);
 
-        $this->assertIsValidPromise($promise);
-
         $index->waitForTask($promise['taskUid']);
         $response = $index->getDocuments();
 
@@ -513,8 +489,6 @@ final class DocumentsTest extends TestCase
 
         $filter = ['filter' => ['id > 0']];
         $promise = $index->deleteDocuments($filter);
-
-        $this->assertIsValidPromise($promise);
 
         $index->waitForTask($promise['taskUid']);
         $response = $index->getDocuments();
@@ -570,8 +544,6 @@ final class DocumentsTest extends TestCase
         $index->waitForTask($response['taskUid']);
         $promise = $index->deleteAllDocuments();
 
-        $this->assertIsValidPromise($promise);
-
         $index->waitForTask($promise['taskUid']);
         $response = $index->getDocuments();
 
@@ -618,8 +590,6 @@ final class DocumentsTest extends TestCase
         $index = $this->createEmptyIndex($this->safeIndexName());
         $promise = $index->updateDocuments($documents, 'unique');
 
-        $this->assertIsValidPromise($promise);
-
         $index->waitForTask($promise['taskUid']);
 
         self::assertSame('unique', $index->fetchPrimaryKey());
@@ -630,7 +600,6 @@ final class DocumentsTest extends TestCase
     {
         $index = $this->createEmptyIndex($this->safeIndexName('movies'));
         $promise = $index->addDocuments(self::DOCUMENTS);
-        $this->assertIsValidPromise($promise);
         $index->waitForTask($promise['taskUid']);
 
         $response = $index->getDocuments((new DocumentsQuery())->setLimit(3));
@@ -681,10 +650,8 @@ final class DocumentsTest extends TestCase
         $index = $this->createEmptyIndex($this->safeIndexName('movies'));
 
         $promise = $index->updateEmbedders(['manual' => ['source' => 'userProvided', 'dimensions' => 3]]);
-        $this->assertIsValidPromise($promise);
         $index->waitForTask($promise['taskUid']);
         $promise = $index->updateDocuments(self::VECTOR_MOVIES);
-        $this->assertIsValidPromise($promise);
         $index->waitForTask($promise['taskUid']);
 
         $response = $index->getDocuments(new DocumentsQuery());
@@ -843,7 +810,6 @@ final class DocumentsTest extends TestCase
         $promises = $index->updateDocumentsCsvInBatches($replacement, 1);
         self::assertCount(2, $promises);
         foreach ($promises as $promise) {
-            $this->assertIsValidPromise($promise);
             $index->waitForTask($promise['taskUid']);
         }
 
@@ -870,18 +836,18 @@ final class DocumentsTest extends TestCase
 
         $index->expects(self::atLeastOnce())
               ->method('updateDocumentsCsv')
-              ->willReturnCallback(function (string $documents, $primaryKey, $delimiter): array {
+              ->willReturnCallback(function (string $documents, $primaryKey, $delimiter): Task {
                   static $invocation = 0;
                   // withConsecutive has no replacement https://github.com/sebastianbergmann/phpunit/issues/4026
                   switch (++$invocation) {
                       case 1:
                           self::assertSame(["id;title\n888221515;Young folks", null, ';'], [$documents, $primaryKey, $delimiter]);
 
-                          return [];
+                          return MockTask::create(TaskType::DocumentEdition);
                       case 2:
                           self::assertSame(["id;title\n235115704;Mister Klein", null, ';'], [$documents, $primaryKey, $delimiter]);
 
-                          return [];
+                          return MockTask::create(TaskType::DocumentEdition);
                       default:
                           self::fail();
                   }
@@ -907,7 +873,6 @@ final class DocumentsTest extends TestCase
         $promises = $index->updateDocumentsNdjsonInBatches($replacement, 1);
         self::assertCount(2, $promises);
         foreach ($promises as $promise) {
-            $this->assertIsValidPromise($promise);
             $index->waitForTask($promise['taskUid']);
         }
 
