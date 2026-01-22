@@ -22,10 +22,21 @@ class Tasks extends Endpoint
         return Task::fromArray($this->http->get(self::PATH.'/'.$taskUid), partial(self::waitTask(...), $this->http));
     }
 
-    // @todo: must return array<Task>
+    /**
+     * @return array{
+     *     results: array<int, Task>,
+     *     from: non-negative-int,
+     *     limit: non-negative-int,
+     *     next: non-negative-int,
+     *     total: non-negative-int
+     * }
+     */
     public function all(array $query = []): array
     {
-        return $this->http->get(self::PATH.'/', $query);
+        $data = $this->http->get(self::PATH.'/', $query);
+        $data['results'] = array_map(fn (array $task) => Task::fromArray($task, partial(self::waitTask(...), $this->http)), $data['results']);
+
+        return $data;
     }
 
     public function cancelTasks(?CancelTasksQuery $options): Task
